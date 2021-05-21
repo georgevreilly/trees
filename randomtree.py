@@ -213,9 +213,9 @@ def deserialize_preorder(seq: list) -> Tree:
 
 def serialize_array_index(tree: Tree) -> list:
     end_index = 0
-    array: list[list] = [] 
+    array: list[Any] = [] 
 
-    def serialize(node: Node) -> int:
+    def serialize_in_order(node: Node) -> int:
         nonlocal end_index
         assert end_index == len(array)
         index = end_index
@@ -223,27 +223,33 @@ def serialize_array_index(tree: Tree) -> list:
         array.append(entry)
         end_index += 1
         if node.left:
-            entry[1] = serialize(node.left)
+            entry[1] = serialize_in_order(node.left)
         if node.right:
-            entry[2] = serialize(node.right)
+            entry[2] = serialize_in_order(node.right)
         return index
 
+    def serialize_post_order(node: Node) -> int:
+        left = serialize_post_order(node.left) if node.left else -1
+        right = serialize_post_order(node.right) if node.right else -1
+        array.append((node.value, left, right))
+        return len(array) - 1
+
     if tree.root:
-        serialize(tree.root)
+        serialize_post_order(tree.root)
     return array
 
 
 def deserialize_array_index(array: list) -> Tree:
-    def deserialize_forwards() -> list[Node]:
+    def deserialize_forwards() -> Tree:
         nodes = [Node(entry[0]) for entry in array]
         for node, entry in zip(nodes, array):
             if entry[1] >= 0:
                 node.left = nodes[entry[1]]
             if entry[2] >= 0:
                 node.right = nodes[entry[2]]
-        return nodes
+        return Tree(nodes[0] if nodes else None)
 
-    def deserialize_backwards() -> list[Node]:
+    def deserialize_backwards() -> Tree:
         nodes: list[Node] = [None] * len(array)  # type: ignore
         for i in range(len(array) - 1, -1, -1):
             entry = array[i]
@@ -253,11 +259,18 @@ def deserialize_array_index(array: list) -> Tree:
             if entry[2] >= 0:
                 right = nodes[entry[2]]
             nodes[i] = Node(entry[0], left, right)
-        return nodes
+        return Tree(nodes[0] if nodes else None)
 
-    nodes = deserialize_backwards()
-    tree = Tree(nodes[0] if nodes else None)
-    return tree
+    def deserialize_post_order() -> Tree:
+        nodes: list[Node] = []
+        for entry in array:
+            left = nodes[entry[1]] if entry[1] >= 0 else None
+            right = nodes[entry[2]] if entry[2] >= 0 else None
+            node = Node(entry[0], left, right)
+            nodes.append(node)
+        return Tree(nodes[-1] if nodes else None)
+
+    return deserialize_post_order()
 
 
 if __name__ == '__main__':
@@ -283,13 +296,13 @@ if __name__ == '__main__':
     print(f"{N=}, len={len(seq)}, #None={seq.count(None)}")
     tree2 = deserialize_preorder(seq)
     print("deserialize_preorder:", tree2)
-    print(tree1 == tree2)
+    print("preorder worked:", tree1 == tree2)
 
     array = serialize_array_index(tree1)
     print("serialize_array_index:", array)
     tree2 = deserialize_array_index(array)
     print("deserialize_array_index:", tree2)
-    print(tree1 == tree2)
+    print("array_index worked:", tree1 == tree2)
 
     d = tree1.to_dict()
     print("to_dict:", d)
@@ -297,10 +310,10 @@ if __name__ == '__main__':
 
     tree3 = Tree.from_dict(d)
     print("from_dict:", tree3)
-    print(tree1 == tree3)
+    print("from_dict worked:", tree1 == tree3)
 
     tree4: Tree = Tree()
     d = tree4.to_dict()
     print("4", d)
     tree5 = Tree.from_dict(d)
-    print(tree4 == tree5)
+    print("empty worked:", tree4 == tree5)
