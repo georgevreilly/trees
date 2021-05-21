@@ -234,12 +234,28 @@ def serialize_array_index(tree: Tree) -> list:
 
 
 def deserialize_array_index(array: list) -> Tree:
-    nodes = [Node(entry[0]) for entry in array]
-    for node, entry in zip(nodes, array):
-        if entry[1] >= 0:
-            node.left = nodes[entry[1]]
-        if entry[2] >= 0:
-            node.right = nodes[entry[2]]
+    def deserialize_forwards() -> list[Node]:
+        nodes = [Node(entry[0]) for entry in array]
+        for node, entry in zip(nodes, array):
+            if entry[1] >= 0:
+                node.left = nodes[entry[1]]
+            if entry[2] >= 0:
+                node.right = nodes[entry[2]]
+        return nodes
+
+    def deserialize_backwards() -> list[Node]:
+        nodes: list[Node] = [None] * len(array)  # type: ignore
+        for i in range(len(array) - 1, -1, -1):
+            entry = array[i]
+            left = right = None
+            if entry[1] >= 0:
+                left = nodes[entry[1]]
+            if entry[2] >= 0:
+                right = nodes[entry[2]]
+            nodes[i] = Node(entry[0], left, right)
+        return nodes
+
+    nodes = deserialize_backwards()
     tree = Tree(nodes[0] if nodes else None)
     return tree
 
