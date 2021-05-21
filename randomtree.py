@@ -102,7 +102,7 @@ class Tree(Generic[T]):
             return self.root.to_dict()
 
     @classmethod
-    def from_dict(cls, d: Optional[dict]) -> Optional['Tree']:
+    def from_dict(cls, d: dict) -> 'Tree':
         return cls(root=Node.from_dict(d) if d else None)
 
 
@@ -274,7 +274,7 @@ def deserialize_array_index(array: list) -> Tree:
 
 
 if __name__ == '__main__':
-    N = 10
+    N = 18
     tree1 = random_tree2(1, 26, N)
     print(tree1)
     # print_tree(tree1)
