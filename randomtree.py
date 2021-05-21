@@ -211,6 +211,42 @@ def deserialize_preorder(seq: list) -> Tree:
     return Tree(root=deserialize())
 
 
+def serialize_array_index(tree: Tree) -> list:
+    index = 0
+    array = []
+
+    def serialize(node: Optional[Node]) -> int:
+        nonlocal index
+        assert index == len(array)
+        entry = index
+        element = [node.value, -1, -1]
+        array.append(element)
+        index += 1
+        if node.left:
+            element[1] = serialize(node.left)
+        if node.right:
+            element[2] = serialize(node.right)
+        return entry
+
+    if tree.root:
+        serialize(tree.root)
+    return array
+
+
+def deserialize_array_index(array: list) -> Tree:
+    nodes = []
+    for i, element in enumerate(array):
+        nodes.append(Node(element[0]))
+    tree = Tree(nodes[0])
+    for i, element in enumerate(array):
+        node = nodes[i]
+        if element[1] >= 0:
+            node.left = nodes[element[1]]
+        if element[2] >= 0:
+            node.right = nodes[element[2]]
+    return tree
+
+
 if __name__ == '__main__':
     N = 10
     tree1 = random_tree2(1, 26, N)
@@ -230,10 +266,16 @@ if __name__ == '__main__':
             print(line)
 
     seq = serialize_preorder(tree1)
-    print("serialize:", seq)
+    print("serialize_preorder:", seq)
     print(f"{N=}, len={len(seq)}, #None={seq.count(None)}")
     tree2 = deserialize_preorder(seq)
-    print("deserialize:", tree2)
+    print("deserialize_preorder:", tree2)
+    print(tree1 == tree2)
+
+    array = serialize_array_index(tree1)
+    print("serialize_array_index:", array)
+    tree2 = deserialize_array_index(array)
+    print("deserialize_array_index:", tree2)
     print(tree1 == tree2)
 
     d = tree1.to_dict()
