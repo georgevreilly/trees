@@ -35,7 +35,9 @@ class Node(Generic[T]):
         result.append(")")
         return "".join(result)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Node):
+            return NotImplemented
         return self.value == other.value and self.left == other.left and self.right == other.right
 
     def __hash__(self) -> int:
@@ -83,7 +85,9 @@ class Tree(Generic[T]):
     def __repr__(self) -> str:
         return f"Tree(root={self.root!r})"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Tree):
+            return NotImplemented
         return self.root == other.root
 
     def __hash__(self) -> int:
