@@ -212,21 +212,21 @@ def deserialize_preorder(seq: list) -> Tree:
 
 
 def serialize_array_index(tree: Tree) -> list:
-    index = 0
-    array = []
+    end_index = 0
+    array: list[list] = [] 
 
-    def serialize(node: Optional[Node]) -> int:
-        nonlocal index
-        assert index == len(array)
-        entry = index
-        element = [node.value, -1, -1]
-        array.append(element)
-        index += 1
+    def serialize(node: Node) -> int:
+        nonlocal end_index
+        assert end_index == len(array)
+        index = end_index
+        entry = [node.value, -1, -1]
+        array.append(entry)
+        end_index += 1
         if node.left:
-            element[1] = serialize(node.left)
+            entry[1] = serialize(node.left)
         if node.right:
-            element[2] = serialize(node.right)
-        return entry
+            entry[2] = serialize(node.right)
+        return index
 
     if tree.root:
         serialize(tree.root)
@@ -234,16 +234,13 @@ def serialize_array_index(tree: Tree) -> list:
 
 
 def deserialize_array_index(array: list) -> Tree:
-    nodes = []
-    for i, element in enumerate(array):
-        nodes.append(Node(element[0]))
-    tree = Tree(nodes[0])
-    for i, element in enumerate(array):
-        node = nodes[i]
-        if element[1] >= 0:
-            node.left = nodes[element[1]]
-        if element[2] >= 0:
-            node.right = nodes[element[2]]
+    nodes = [Node(entry[0]) for entry in array]
+    for node, entry in zip(nodes, array):
+        if entry[1] >= 0:
+            node.left = nodes[entry[1]]
+        if entry[2] >= 0:
+            node.right = nodes[entry[2]]
+    tree = Tree(nodes[0] if nodes else None)
     return tree
 
 
